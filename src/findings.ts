@@ -30,11 +30,35 @@ export const RULES: Record<string, Rule> = {
       "Record the migration plan and date as evidence of remediation.",
     ],
   },
+  "RC-DB-002": {
+    id: "RC-DB-002", exposure: "LIKELY",
+    title: "Backups stored outside Nigeria",
+    why: "Backups are full copies of the data. If the source holds payment transaction records, this stores a copy of them outside Nigeria. The circular doesn't mention backups explicitly, but a stored copy is still stored data.",
+    remediation: [
+      "Point backup copies at a vault or region located in Nigeria.",
+      "If a foreign DR copy is required, document why and track CBN guidance on backups.",
+    ],
+  },
+  "RC-DB-003": {
+    id: "RC-DB-003", exposure: "LIKELY",
+    title: "Database replica outside Nigeria",
+    why: "A replica holds a live copy of the primary's data. If the primary stores payment transaction records, so does this replica, outside Nigeria.",
+    remediation: [
+      "Move the replica to a region in Nigeria, or remove it.",
+      "If it serves DR, document the arrangement and track CBN guidance on DR.",
+    ],
+  },
   "RC-DB-004": {
     id: "RC-DB-004", exposure: "UNCLEAR",
-    title: "Database outside Nigeria (no payment tables detected)",
-    why: "No payment tables were found by the schema scan. If this database does store payment transaction data, treat this as CLEAR.",
-    remediation: ["Confirm whether this database stores payment transaction data.", "If it does, plan its migration to Nigeria."],
+    title: "Data store outside Nigeria (no payment tables detected)",
+    why: "No payment tables were found by the schema scan. If this data store does hold payment transaction data, treat this as CLEAR (primary) or LIKELY (copy).",
+    remediation: ["Confirm whether this data store holds payment transaction data.", "If it does, plan its migration to Nigeria."],
+  },
+  "RC-WH-001": {
+    id: "RC-WH-001", exposure: "LIKELY",
+    title: "Data warehouse outside Nigeria in a project with payment data",
+    why: "Warehouses are usually loaded from production databases, so they often hold copies of payment transaction records.",
+    remediation: ["Check which payment tables are loaded into the warehouse.", "Move it to Nigeria, or exclude payment transaction data from the pipeline."],
   },
   "RC-ST-001": {
     id: "RC-ST-001", exposure: "LIKELY",
@@ -128,8 +152,11 @@ function ruleFor(loc: Location, hasHigh: boolean): string {
   if (loc.country === NIGERIA) return "RC-NG-001";
   if (loc.kind === "messaging") return "RC-MSG-001";
   if (!loc.country) return "RC-UNK-001";
+  if (loc.role === "backup") return hasHigh ? "RC-DB-002" : "RC-DB-004";
+  if (loc.role === "replica" && loc.kind === "database") return hasHigh ? "RC-DB-003" : "RC-DB-004";
   switch (loc.kind) {
     case "database": return hasHigh ? "RC-DB-001" : "RC-DB-004";
+    case "warehouse": return hasHigh ? "RC-WH-001" : "RC-DB-004";
     case "storage": return hasHigh ? "RC-ST-001" : "RC-ST-002";
     case "error-tracking": return "RC-OBS-001";
     case "logging": return "RC-OBS-002";
@@ -148,7 +175,7 @@ export function buildFindings(locations: Location[], datasets: Dataset[]): Findi
 
   const findings = locations.map((loc): Finding => {
     const rule = RULES[ruleFor(loc, hasHigh)]!;
-    const holdsData = loc.kind === "database";
+    const holdsData = loc.kind === "database" || loc.kind === "warehouse" || !!loc.role;
     let why = rule.why;
     if (holdsData && databases > 1 && paymentData.length) {
       why += " Several databases were found and we can't tell which holds which tables, so payment tables are attached to each.";

@@ -32,18 +32,21 @@ export function renderTerminal(result: ScanResult): string {
   if (!payment.length) {
     line(pc.dim("  none found (checked Prisma, SQL migrations and Drizzle schemas)"));
   }
+  const nameWidth = Math.max(20, ...payment.map((d) => d.name.length));
   for (const d of payment) {
     const where = `${d.evidence.file}${d.evidence.line ? `:${d.evidence.line}` : ""}`;
     const rel = d.relevance === "HIGH" ? pc.red(d.relevance.padEnd(7)) : pc.yellow(d.relevance.padEnd(7));
-    line(`  ${d.name.padEnd(24)} ${rel} ${pc.dim(where)}`);
+    line(`  ${d.name.padEnd(nameWidth)}  ${rel} ${pc.dim(where)}`);
   }
   line();
 
   line(pc.bold("Where it goes"));
   if (!result.findings.length) line(pc.dim("  no external services detected"));
+  const serviceWidth = Math.max(20, ...result.findings.map((f) => f.location.service.length));
+  const destWidth = Math.max(20, ...result.findings.map((f) => destination(f.location).length));
   for (const f of result.findings) {
     const s = EXPOSURE_STYLE[f.exposure];
-    line(`  ${s.color(s.symbol)} ${f.location.service.padEnd(26)} ${destination(f.location).padEnd(30)} ${s.color(f.exposure.padEnd(8))} ${pc.dim(f.id)}`);
+    line(`  ${s.color(s.symbol)} ${f.location.service.padEnd(serviceWidth)}  ${destination(f.location).padEnd(destWidth)}  ${s.color(f.exposure.padEnd(8))} ${pc.dim(f.id)}`);
   }
   line();
 
@@ -58,6 +61,12 @@ export function renderTerminal(result: ScanResult): string {
     line(pc.bold("Requires third-party confirmation"));
     line(`  ${verify.map((f) => f.location.provider).join(", ")}`);
     line(pc.dim(wrap("ResidencyCheck does not assert where processors store data. Ask each for written confirmation of their CBN localisation status.", 2)));
+    line();
+  }
+
+  if (result.notAnalysed.length) {
+    line(pc.bold("Not analysed"));
+    for (const n of result.notAnalysed) line(wrap(`- ${n}`, 2, 4));
     line();
   }
 

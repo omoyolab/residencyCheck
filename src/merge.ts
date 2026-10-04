@@ -5,8 +5,9 @@ const RANK: Record<LocationConfidence, number> = { UNKNOWN: 0, INFERRED: 1, DECL
 
 /**
  * Collapse per-detector sightings into one Location per real service.
- * Within a provider+kind group, the most confident sightings win and absorb the
- * evidence of weaker ones (e.g. `@sentry/node` in package.json + SENTRY_DSN in .env).
+ * Within a provider+kind group, a weaker sighting folds into a stronger one when
+ * it's the same service (e.g. `@sentry/node` in package.json + SENTRY_DSN in .env)
+ * or has no location of its own. Distinct located services are never merged.
  */
 export function mergeLocations(detected: Detected[]): Location[] {
   const concreteKinds = new Set(detected.filter((d) => !d.generic).map((d) => d.kind));
@@ -14,27 +15,27 @@ export function mergeLocations(detected: Detected[]): Location[] {
 
   const groups = new Map<string, Detected[]>();
   for (const d of kept) {
-    const key = `${d.provider}|${d.kind}`;
+    const key = `${d.provider}|${d.kind}|${d.role ?? ""}`;
     groups.set(key, [...(groups.get(key) ?? []), d]);
   }
 
   let merged: Location[] = [];
   for (const group of groups.values()) {
-    const best = Math.max(...group.map((d) => RANK[d.locationConfidence]));
-    const primaries: Location[] = [];
-    const leftover: Evidence[] = [];
-    for (const d of group) {
+    const sorted = [...group].sort((a, b) => RANK[b.locationConfidence] - RANK[a.locationConfidence]);
+    const result: Location[] = [];
+    for (const d of sorted) {
       const { generic: _generic, ...loc } = d;
-      if (RANK[d.locationConfidence] !== best) {
-        leftover.push(...d.evidence);
-        continue;
+      const weaker = (p: Location) => RANK[loc.locationConfidence] < RANK[p.locationConfidence];
+      const same = result.find((p) => p.service === loc.service && (p.region === loc.region || weaker(p)));
+      if (same) {
+        same.evidence.push(...loc.evidence);
+      } else if (!loc.country && result[0] && weaker(result[0])) {
+        result[0].evidence.push(...loc.evidence);
+      } else {
+        result.push({ ...loc, evidence: [...loc.evidence] });
       }
-      const same = primaries.find((p) => p.region === loc.region && p.service === loc.service);
-      if (same) same.evidence.push(...loc.evidence);
-      else primaries.push({ ...loc, evidence: [...loc.evidence] });
     }
-    primaries[0]!.evidence.push(...leftover);
-    merged.push(...primaries);
+    merged.push(...result);
   }
 
   merged = applyAwsDefaultRegion(merged);

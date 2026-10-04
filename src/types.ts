@@ -12,6 +12,7 @@ export type ServiceKind =
   | "storage"
   | "cache"
   | "queue"
+  | "warehouse"
   | "error-tracking"
   | "logging"
   | "analytics"
@@ -19,6 +20,9 @@ export type ServiceKind =
   | "hosting"
   | "cloud"
   | "payments";
+
+/** A copy of another data store, as opposed to its primary. */
+export type Role = "replica" | "backup";
 
 export interface Evidence {
   file: string;
@@ -31,6 +35,7 @@ export interface Location {
   provider: string;
   service: string;
   kind: ServiceKind;
+  role?: Role;
   region?: string;
   /** ISO 3166-1 alpha-2, or "EU". Undefined when unknown. */
   country?: string;
@@ -67,5 +72,7 @@ export interface ScanResult {
   datasets: Dataset[];
   locations: Location[];
   findings: Finding[];
+  /** Things we saw but couldn't check. Listed so they never pass silently. */
+  notAnalysed: string[];
   summary: Record<Exposure, number>;
 }

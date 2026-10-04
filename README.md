@@ -19,9 +19,12 @@ It runs **entirely on your machine**. No network calls, no telemetry, no uploads
 | Environment | `.env`, `.env.*` (read even when gitignored) |
 | Dependencies | `package.json`, `requirements*.txt`, `pyproject.toml`, `Pipfile`, `go.mod` |
 | Platform config | `vercel.json`, `render.yaml`, `fly.toml`, `railway.json`, `supabase/.temp/pooler-url` |
+| Terraform | `*.tf`, `*.tfvars` for AWS, Google Cloud and Azure: databases, buckets, caches, queues, warehouses, hosting, **replicas and backups** (RDS read replicas, cross-region backup replication, S3 replication, DynamoDB global tables, Cloud SQL replicas, Cosmos DB geo-locations, Azure geo-redundancy). Follows provider aliases, variables, locals, local modules and common registry modules. |
 | Schema | Prisma, SQL migrations, Drizzle |
 
 Secret values are never printed. Evidence shows only key names and hostnames.
+
+Anything the scanner sees but can't check, such as a Terraform module from an unrecognised source, is listed under **Not analysed**. Nothing passes silently.
 
 ## How to read the output
 

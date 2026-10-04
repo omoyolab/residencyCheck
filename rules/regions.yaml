@@ -89,7 +89,9 @@ azure:
   uksouth: GB
   ukwest: GB
   francecentral: FR
+  francesouth: FR
   germanywestcentral: DE
+  germanynorth: DE
   switzerlandnorth: CH
   swedencentral: SE
   norwayeast: "NO"
@@ -104,6 +106,7 @@ azure:
   canadacentral: CA
   brazilsouth: BR
   uaenorth: AE
+  uaecentral: AE
   qatarcentral: QA
   centralindia: IN
   southeastasia: SG

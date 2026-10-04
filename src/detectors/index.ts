@@ -7,3 +7,4 @@ export { detectEnv } from "./env.js";
 export { detectDeps } from "./deps.js";
 export { detectPlatform } from "./platform.js";
 export { detectSchema } from "./schema.js";
+export { detectTerraform } from "./terraform.js";

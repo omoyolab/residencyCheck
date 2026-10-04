@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { detectDeps, detectEnv, detectPlatform, detectSchema } from "./detectors/index.js";
+import { detectDeps, detectEnv, detectPlatform, detectSchema, detectTerraform } from "./detectors/index.js";
 import { buildFindings, EXPOSURE_ORDER } from "./findings.js";
 import { mergeLocations } from "./merge.js";
 import type { Exposure, ScanResult } from "./types.js";
@@ -11,7 +11,13 @@ export function scan(path: string): ScanResult {
   const ctx = buildContext(root);
 
   const datasets = detectSchema(ctx);
-  const locations = mergeLocations([...detectEnv(ctx), ...detectDeps(ctx), ...detectPlatform(ctx)]);
+  const terraform = detectTerraform(ctx);
+  const locations = mergeLocations([
+    ...detectEnv(ctx),
+    ...detectDeps(ctx),
+    ...detectPlatform(ctx),
+    ...terraform.locations,
+  ]);
   const findings = buildFindings(locations, datasets);
 
   const summary = Object.fromEntries(EXPOSURE_ORDER.map((e) => [e, 0])) as Record<Exposure, number>;
@@ -25,6 +31,7 @@ export function scan(path: string): ScanResult {
     datasets,
     locations,
     findings,
+    notAnalysed: terraform.notes,
     summary,
   };
 }
