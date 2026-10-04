@@ -97,3 +97,13 @@ describe("lagos-hosted fixture", () => {
     expect(r.findings.every((f) => f.paymentRelevance === "LOW")).toBe(true);
   });
 });
+
+describe("schema-only fixture", () => {
+  const r = scan(fixture("schema-only"));
+
+  it("never reads as all-clear when payment tables have no known database", () => {
+    expect(r.findings).toHaveLength(1);
+    expect(r.findings[0]).toMatchObject({ id: "RC-UNK-002", exposure: "UNCLEAR", paymentRelevance: "HIGH" });
+    expect(r.summary.UNCLEAR).toBe(1);
+  });
+});

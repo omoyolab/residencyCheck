@@ -20,7 +20,11 @@ export const regions = load("regions.yaml") as {
 
 export const paymentRules = load("payment-data.yaml") as {
   tables: Record<Exclude<PaymentRelevance, "LOW">, string[]>;
-  columns: Record<Exclude<PaymentRelevance, "LOW">, string[]> & { amountCompanions: string[] };
+  columns: Record<Exclude<PaymentRelevance, "LOW">, string[]> & {
+    money: string[];
+    moneySuffixes: string[];
+    moneyCompanions: string[];
+  };
 };
 
 export function awsCountry(region: string): string | undefined {

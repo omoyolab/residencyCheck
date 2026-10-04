@@ -93,6 +93,15 @@ export const RULES: Record<string, Rule> = {
     why: "We couldn't determine where this service is located from the project configuration. Unknown is not a pass.",
     remediation: ["Confirm the location and declare it in residencycheck.yaml (coming in v0.2)."],
   },
+  "RC-UNK-002": {
+    id: "RC-UNK-002", exposure: "UNCLEAR",
+    title: "Payment data found, but no database location in the project",
+    why: "The schema defines payment tables, but no connection string or platform config shows where that database runs. It is probably set in deployment secrets. Unknown is not a pass.",
+    remediation: [
+      "Find where the production database is hosted (cloud console or deployment secrets).",
+      "Re-run with a local .env that contains the production host (values are never printed), or declare it in residencycheck.yaml (coming in v0.2).",
+    ],
+  },
   "RC-3P-001": {
     id: "RC-3P-001", exposure: "VERIFY",
     title: "Third-party payment processor — confirmation required",
@@ -157,6 +166,28 @@ export function buildFindings(locations: Location[], datasets: Dataset[]): Findi
       citation: CITATION,
     };
   });
+
+  // Payment tables with nowhere to put them must not read as "all clear".
+  if (paymentData.length && !databases) {
+    const rule = RULES["RC-UNK-002"]!;
+    findings.push({
+      id: rule.id,
+      title: rule.title,
+      exposure: rule.exposure,
+      paymentRelevance: projectRelevance,
+      location: {
+        provider: "Unknown",
+        service: "Payment database",
+        kind: "database",
+        locationConfidence: "UNKNOWN",
+        evidence: paymentData.slice(0, 3).map((d) => d.evidence),
+      },
+      datasets: paymentData,
+      why: rule.why,
+      remediation: rule.remediation,
+      citation: CITATION,
+    });
+  }
 
   return findings.sort(
     (a, b) =>

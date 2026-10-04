@@ -54,6 +54,10 @@ describe("classify", () => {
     ["users", ["bvn"], "MEDIUM"],
     ["wallets", [], "MEDIUM"],
     ["merchants", ["amount"], "MEDIUM"],
+    ["orders", ["subtotalCents", "currency"], "HIGH"],
+    ["orders", ["paymentStatus"], "HIGH"],
+    ["bookings", ["price_kobo", "reference"], "HIGH"],
+    ["events", ["total_guests"], "LOW"],
     ["posts", ["title", "standard", "company"], "LOW"],
     ["discharges", [], "LOW"],
   ])("%s %j → %s", (table, cols, level) => {

@@ -39,12 +39,25 @@ columns:
     - rrn
     - stan
     - terminal_id
+    - payment_status
   MEDIUM:
     - bvn
     - bank_code
     - authorization_code
     - amount
-  # "amount" together with any of these lifts a table to HIGH.
-  amountCompanions:
+  # A money column together with a companion lifts a table to HIGH.
+  money:
+    - amount
+    - total
+    - subtotal
+    - price
+    - fee
+    - balance
+  # Minor-unit columns count as money too: price_cents, amount_kobo.
+  moneySuffixes:
+    - cents
+    - kobo
+    - minor
+  moneyCompanions:
     - currency
     - reference

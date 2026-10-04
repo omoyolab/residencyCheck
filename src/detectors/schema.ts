@@ -44,9 +44,13 @@ export function classify(table: string, columns: string[]): { relevance: Payment
     const hits = colsMatching(p);
     if (hits.length) { raise("HIGH"); signals.push(...hits); }
   }
-  const amount = colsMatching("amount");
-  const companions = paymentRules.columns.amountCompanions.flatMap(colsMatching);
-  if (amount.length && companions.length) { raise("HIGH"); signals.push(...amount, ...companions); }
+  const { money, moneySuffixes, moneyCompanions } = paymentRules.columns;
+  const moneyCols = [
+    ...money.flatMap(colsMatching),
+    ...cols.filter((c) => moneySuffixes.some((s) => c.endsWith(`_${s}`))),
+  ];
+  const companions = moneyCompanions.flatMap(colsMatching);
+  if (moneyCols.length && companions.length) { raise("HIGH"); signals.push(...moneyCols, ...companions); }
   for (const p of paymentRules.columns.MEDIUM) {
     const hits = colsMatching(p);
     if (hits.length) { raise("MEDIUM"); signals.push(...hits); }
