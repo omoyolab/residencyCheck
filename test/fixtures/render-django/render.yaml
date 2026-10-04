@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: payments-api
+    region: frankfurt
+databases:
+  - name: payments-db

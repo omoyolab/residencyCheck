@@ -1,0 +1,50 @@
+# Payment relevance patterns. Names are compared after converting to snake_case.
+# A table pattern matches the whole name, its start, or any "_"-separated segment start
+# ("payment" matches payments, payment_events, failed_payments).
+# A column pattern matches the whole column name, a "pattern_" prefix or a "_pattern" suffix.
+
+tables:
+  HIGH:
+    - transaction
+    - payment
+    - transfer
+    - settlement
+    - payout
+    - charge
+    - refund
+    - ledger
+    - webhook_event
+    - disbursement
+    - remittance
+    - withdrawal
+    - deposit
+  MEDIUM:
+    - wallet
+    - invoice
+    - order
+    - subscription
+    - customer
+    - audit_log
+    - beneficiar
+    - bank_account
+    - card
+
+columns:
+  HIGH:
+    - pan
+    - card_number
+    - account_number
+    - nuban
+    - narration
+    - rrn
+    - stan
+    - terminal_id
+  MEDIUM:
+    - bvn
+    - bank_code
+    - authorization_code
+    - amount
+  # "amount" together with any of these lifts a table to HIGH.
+  amountCompanions:
+    - currency
+    - reference

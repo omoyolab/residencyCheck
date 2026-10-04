@@ -1,0 +1,26 @@
+model User {
+  id        String   @id
+  email     String
+  bvn       String?
+}
+
+model Transaction {
+  id          String   @id
+  amountKobo  Int
+  currency    String
+  reference   String   @unique
+  status      String
+  createdAt   DateTime @default(now())
+
+  @@map("transactions")
+}
+
+model WebhookEvent {
+  id        String @id
+  payload   Json
+}
+
+model Post {
+  id    String @id
+  title String
+}
